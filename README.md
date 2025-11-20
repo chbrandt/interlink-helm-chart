@@ -30,22 +30,7 @@ appearing as regular nodes to the Kubernetes scheduler.
 
 ## Installation
 
-### From OCI Registry (Recommended)
-
-```bash
-# Add the repository
-# Will be available once published:
-# helm repo add interlink https://intertwin-eu.github.io/interlink-helm-chart/
-
-# Update repositories
-helm repo update
-
-# Install with custom values
-helm install --create-namespace -n interlink virtual-node \
-  interlink/interlink --values my-values.yaml
-```
-
-### From OCI Registry (Alternative)
+### From OCI Registry
 
 ```bash
 helm install --create-namespace -n interlink virtual-node \
