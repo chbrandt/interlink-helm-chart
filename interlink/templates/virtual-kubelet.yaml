@@ -54,6 +54,10 @@ spec:
         {{- with .Values.plugin.resources }}
         {{- include "interlink.containerResources" . | nindent 8 }}
         {{- end }}
+        {{- if .Values.plugin.wstunnel.port }}
+        ports:
+        - containerPort: {{.Values.plugin.wstunnel.port}}
+        {{- end }}
         volumeMounts:
           - name: plugin-config
             mountPath: /etc/interlink/plugin.yaml
@@ -191,26 +195,24 @@ spec:
         {{- end }}
       {{- end }}
 
-      {{- if .Values.wsBastion.enabled }}
-      - name: ws-bastion
-        image: ghcr.io/erebe/wstunnel:latest
-        imagePullPolicy: Always
-        args:
-        - "./wstunnel"
-        - "server"
-        - "--log-lvl=debug"
-        - "--dns-resolver-prefer-ipv4"
-        - "--restrict-http-upgrade-path-prefix"
-        - "h3GywpDrP6gJEdZ6xbJbZZVFmvFZDCa4KcRd"
-        - "ws://0.0.0.0:8420"
-        ports:
-        - containerPort: 8420
-        - containerPort: 4000
-        resources:
-          requests:
-            cpu: 100m
-            memory: 90Mi
-      {{- end }}
+      # - name: ws-bastion
+      #   image: ghcr.io/erebe/wstunnel:latest
+      #   imagePullPolicy: Always
+      #   args:
+      #   - "./wstunnel"
+      #   - "server"
+      #   - "--log-lvl=debug"
+      #   - "--dns-resolver-prefer-ipv4"
+      #   - "--restrict-http-upgrade-path-prefix"
+      #   - "h3GywpDrP6gJEdZ6xbJbZZVFmvFZDCa4KcRd"
+      #   - "ws://0.0.0.0:8420"
+      #   ports:
+      #   - containerPort: 8420
+      #   - containerPort: 4000
+      #   resources:
+      #     requests:
+      #       cpu: 100m
+      #       memory: 90Mi
 
       {{- if .Values.sshBastion.enabled }}
       - name: ssh-bastion
@@ -335,7 +337,7 @@ data:
 
 {{- end }}
 
-{{- if .Values.wsBastion.enabled }}
+{{- if .Values.plugin.wstunnel }}
 ---
 apiVersion: v1
 kind: Service
@@ -347,8 +349,8 @@ spec:
   selector:
     app: {{.Values.nodeName}}
   ports:
-    - port: 8420
-      targetPort: 8420
+    - port: {{.Values.plugin.wstunnel.port}}
+      targetPort: {{.Values.plugin.wstunnel.port}}
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -366,7 +368,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: "{{ .Values.wsBastion.hostname }}"
+    - host: "{{ .Values.plugin.wstunnel.host }}"
       http:
         paths:
           - path: /
@@ -375,21 +377,19 @@ spec:
               service:
                 name: wstunnel
                 port:
-                  number: 8420
+                  number: {{.Values.plugin.wstunnel.port}}
 {{- end }}
 
-{{- if .Values.interlink.enabled }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: interlink
-  namespace: {{.Release.Namespace}}
-spec:
-  type: ClusterIP
-  selector:
-    app: {{.Values.nodeName}}
-  ports:
-    - port: {{.Values.interlink.port}}
-      targetPort: {{.Values.interlink.port}}
-{{- end }}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: interlink
+#   namespace: {{.Release.Namespace}}
+# spec:
+#   type: ClusterIP
+#   selector:
+#     app: {{.Values.nodeName}}
+#   ports:
+#     - port: {{.Values.interlink.port}}
+#       targetPort: {{.Values.interlink.port}}

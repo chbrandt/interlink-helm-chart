@@ -4,9 +4,9 @@
 
 nodeName: virtual-node
 
-wsBastion:
-  enabled: true
-  hostname: interlink.dev.local
+# wsBastion:
+#   enabled: true
+#   hostname: interlink.dev.local
 
 interlink:
   image: ghcr.io/interlink-hq/interlink/interlink:latest
@@ -17,7 +17,7 @@ interlink:
   # unix socket in /var/run
   socket: ""
   # if socket is specified, the address/port are ignored
-  address: http://localhost
+  address: http://0.0.0.0
   port: 3000
   kubernetesApiAddr: ""
   kubernetesApiPort: ""
@@ -143,8 +143,12 @@ plugin:
     #   value: /etc/interlink/plugin.yaml
   socket: null
   # if socket is specified, the address/port are ignored
-  address: http://localhost
-  port: 4000
+  address: ""
+  port: ""
+  # Run service for wstunnel to allow access to the plugin   
+  # wstunnel:
+  #   port: 8080
+  #   host: "dev.local"
   # Run plugin container with privileged permissions
   privileged: false
   # Resource requests and limits for the plugin container
