@@ -27,10 +27,48 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
+
       - name: curl
         image: curlimages/curl:latest
         imagePullPolicy: Always
         command: ["sh", "-c", "sleep infinity"]
+
+      {{- if .Values.wstunnel.enabled }}
+      - name: wstunnel
+        image: {{.Values.wstunnel.image | default "ghcr.io/erebe/wstunnel:latest" }}
+        imagePullPolicy: Always
+        args:
+          - "./wstunnel"
+          - "server"
+          - "--log-lvl={{.Values.wstunnel.logLevel | default "info" | lower }}"
+          - "--dns-resolver-prefer-ipv4"
+          - "--restrict-http-upgrade-path-prefix"
+          - "{{.Values.wstunnel.secret}}"
+          - "ws://0.0.0.0:{{.Values.wstunnel.port}}"
+        {{- if .Values.wstunnel.privileged }}
+        securityContext:
+          privileged: true
+        {{- end }}
+        {{- with .Values.wstunnel.envs }}
+        env:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.wstunnel.resources }}
+        {{- include "interlink.containerResources" . | nindent 8 }}
+        {{- end }}
+        ports:
+          - containerPort: {{.Values.wstunnel.port}}
+          - containerPort: {{.Values.plugin.port}}
+        volumeMounts:
+          {{- if .Values.wstunnel.socket }}
+          - name: sockets
+            mountPath: /var/run/
+          {{- end }}
+          {{- with .Values.wstunnel.extraVolumeMounts }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+      {{- end }}
+
       {{- if .Values.plugin.enabled }}
       - name: plugin
         image: "{{.Values.plugin.image}}"
@@ -54,10 +92,6 @@ spec:
         {{- with .Values.plugin.resources }}
         {{- include "interlink.containerResources" . | nindent 8 }}
         {{- end }}
-        {{- if .Values.plugin.wstunnel.port }}
-        ports:
-        - containerPort: {{.Values.plugin.wstunnel.port}}
-        {{- end }}
         volumeMounts:
           - name: plugin-config
             mountPath: /etc/interlink/plugin.yaml
@@ -70,6 +104,7 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
       {{- end }}
+
       {{- if .Values.interlink.enabled }}
       - name: interlink
         image: "{{.Values.interlink.image}}"
@@ -96,6 +131,7 @@ spec:
           {{- toYaml . | nindent 10 }}
           {{- end }}
       {{- end }}
+
       - name: vk
         image: {{.Values.virtualNode.image}}
         imagePullPolicy: Always
@@ -114,6 +150,7 @@ spec:
         - name: ENABLE_TRACING
           value: "1"
         {{- end }}
+
         {{- if .Values.OAUTH.enabled }}
         - name: VKTOKENFILE
           value: "/opt/interlink/token"
@@ -161,6 +198,7 @@ spec:
         {{- with .Values.virtualNode.containerResources }}
         {{- include "interlink.containerResources" . | nindent 8 }}
         {{- end }}
+        
       {{- if .Values.OAUTH.enabled }}
       - name: refresh-token
         image: "{{.Values.OAUTH.image}}"
@@ -194,25 +232,6 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- end }}
-
-      # - name: ws-bastion
-      #   image: ghcr.io/erebe/wstunnel:latest
-      #   imagePullPolicy: Always
-      #   args:
-      #   - "./wstunnel"
-      #   - "server"
-      #   - "--log-lvl=debug"
-      #   - "--dns-resolver-prefer-ipv4"
-      #   - "--restrict-http-upgrade-path-prefix"
-      #   - "h3GywpDrP6gJEdZ6xbJbZZVFmvFZDCa4KcRd"
-      #   - "ws://0.0.0.0:8420"
-      #   ports:
-      #   - containerPort: 8420
-      #   - containerPort: 4000
-      #   resources:
-      #     requests:
-      #       cpu: 100m
-      #       memory: 90Mi
 
       {{- if .Values.sshBastion.enabled }}
       - name: ssh-bastion
@@ -337,7 +356,7 @@ data:
 
 {{- end }}
 
-{{- if .Values.plugin.wstunnel }}
+{{- if .Values.wstunnel.enabled }}
 ---
 apiVersion: v1
 kind: Service
@@ -349,8 +368,8 @@ spec:
   selector:
     app: {{.Values.nodeName}}
   ports:
-    - port: {{.Values.plugin.wstunnel.port}}
-      targetPort: {{.Values.plugin.wstunnel.port}}
+    - port: {{.Values.wstunnel.port}}
+      targetPort: {{.Values.wstunnel.port}}
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -368,7 +387,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: "{{ .Values.plugin.wstunnel.host }}"
+    - host: {{ .Values.wstunnel.host }}
       http:
         paths:
           - path: /
@@ -377,19 +396,5 @@ spec:
               service:
                 name: wstunnel
                 port:
-                  number: {{.Values.plugin.wstunnel.port}}
+                  number: {{.Values.wstunnel.port}}
 {{- end }}
-
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: interlink
-#   namespace: {{.Release.Namespace}}
-# spec:
-#   type: ClusterIP
-#   selector:
-#     app: {{.Values.nodeName}}
-#   ports:
-#     - port: {{.Values.interlink.port}}
-#       targetPort: {{.Values.interlink.port}}

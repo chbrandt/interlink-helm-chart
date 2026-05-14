@@ -145,10 +145,6 @@ plugin:
   # if socket is specified, the address/port are ignored
   address: ""
   port: ""
-  # Run service for wstunnel to allow access to the plugin   
-  # wstunnel:
-  #   port: 8080
-  #   host: "dev.local"
   # Run plugin container with privileged permissions
   privileged: false
   # Resource requests and limits for the plugin container
@@ -159,6 +155,25 @@ plugin:
     memory:
       request: "500Mi"
       limit: "2Gi"
+  # Extra volume mounts for the plugin container
+  extraVolumeMounts: []
+    # - name: data-root
+    #   mountPath: /data
+    #   readOnly: false
+
+wstunnel:
+  enabled: false
+  port: 8080
+  host: example.com
+  logLevel: info
+  secret: "change-me-to-a-secure-value"
+  resources:
+    CPU:
+      request: "50m"
+      limit: "100m"
+    memory:
+      request: "64Mi"
+      limit: "128Mi"
   # Extra volume mounts for the plugin container
   extraVolumeMounts: []
     # - name: data-root
