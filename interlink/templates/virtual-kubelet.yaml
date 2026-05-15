@@ -1,3 +1,4 @@
+{{- $wstunnel_port := .Values.wstunnel.port | default 8080 | int}}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -44,7 +45,7 @@ spec:
           - "--dns-resolver-prefer-ipv4"
           - "--restrict-http-upgrade-path-prefix"
           - "{{.Values.wstunnel.secret}}"
-          - "ws://0.0.0.0:{{.Values.wstunnel.port}}"
+          - "ws://0.0.0.0:{{$wstunnel_port}}"
         {{- if .Values.wstunnel.privileged }}
         securityContext:
           privileged: true
@@ -57,7 +58,7 @@ spec:
         {{- include "interlink.containerResources" . | nindent 8 }}
         {{- end }}
         ports:
-          - containerPort: {{.Values.wstunnel.port}}
+          - containerPort: {{$wstunnel_port}}
           - containerPort: {{.Values.plugin.port}}
         volumeMounts:
           {{- if .Values.wstunnel.socket }}
@@ -368,8 +369,8 @@ spec:
   selector:
     app: {{.Values.nodeName}}
   ports:
-    - port: {{.Values.wstunnel.port}}
-      targetPort: {{.Values.wstunnel.port}}
+    - port: {{$wstunnel_port}}
+      targetPort: {{$wstunnel_port}}
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -396,5 +397,5 @@ spec:
               service:
                 name: wstunnel
                 port:
-                  number: {{.Values.wstunnel.port}}
+                  number: {{$wstunnel_port}}
 {{- end }}
