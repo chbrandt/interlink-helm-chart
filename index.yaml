@@ -2,6 +2,31 @@ apiVersion: v1
 entries:
   interlink:
   - apiVersion: v2
+    appVersion: 0.6.0
+    created: "2026-06-08T12:47:35.574052899Z"
+    description: Install interLink components and initiate your virtual node.
+    digest: d002b1d1792773a7b4d65c9cf60eb404c22a2e0c62c90f7d49cc8fb87432a24c
+    home: https://intertwin-eu.github.io/interLink/
+    keywords:
+    - virtual-kubelet
+    - kubernetes
+    - hybrid-cloud
+    - hpc
+    - batch-computing
+    - interlink
+    kubeVersion: '>=1.20.0-0'
+    maintainers:
+    - name: interTwin-eu
+      url: https://github.com/interTwin-eu
+    name: interlink
+    sources:
+    - https://github.com/interTwin-eu/interLink
+    - https://github.com/interTwin-eu/interlink-helm-chart
+    type: application
+    urls:
+    - https://github.com/chbrandt/interlink-helm-chart/releases/download/interlink-0.6.1-egi.1/interlink-0.6.1-egi.1.tgz
+    version: 0.6.1-egi.1
+  - apiVersion: v2
     appVersion: 0.3.5
     created: "2025-06-09T13:04:45.064264871Z"
     description: Install interLink components and initiate your virtual node.
@@ -41,4 +66,4 @@ entries:
     urls:
     - https://github.com/interTwin-eu/interlink-helm-chart/releases/download/interlink-0.1.0/interlink-0.1.0.tgz
     version: 0.1.0
-generated: "2025-06-09T13:04:45.064293364Z"
+generated: "2026-06-08T12:47:35.574072382Z"
