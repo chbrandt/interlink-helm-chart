@@ -1,4 +1,4 @@
-{{- if .Values.wstunnel.enabled && .Values.wstunnel.ingress }}
+{{- if and .Values.wstunnel.enabled .Values.wstunnel.ingress.host }}
 {{- $wstunnel_port := .Values.wstunnel.port | default 8080 | int}}
 ---
 apiVersion: v1
