@@ -1,0 +1,40 @@
+{{- if .Values.wstunnel.enabled && .Values.wstunnel.ingress }}
+{{- $wstunnel_port := .Values.wstunnel.port | default 8080 | int}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wstunnel
+  namespace: {{.Release.Namespace}}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{.Values.nodeName}}
+  ports:
+    - port: {{$wstunnel_port}}
+      targetPort: {{$wstunnel_port}}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wstunnel
+  namespace: {{.Release.Namespace}}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "wstunnel"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: {{ .Values.wstunnel.ingress.host }}
+      http:
+        paths:
+          - path: "/{{ .Values.wstunnel.secret | default "" }}"
+            pathType: Prefix
+            backend:
+              service:
+                name: wstunnel
+                port:
+                  number: {{$wstunnel_port}}
+{{- end }}

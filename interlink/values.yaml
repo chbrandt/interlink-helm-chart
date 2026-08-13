@@ -164,9 +164,11 @@ plugin:
 wstunnel:
   enabled: false
   port: 8080
-  host: example.com
+  scheme: "ws" # or "wss" for secure websocket (ie., if your ingress is configured with TLS)
+  secret: "my-tunnel" # will be used as secret and path for the wstunnel endpoint
+  ingress:
+    host: "tunnel.example.com"
   logLevel: info
-  secret: "change-me-to-a-secure-value"
   resources:
     CPU:
       request: "50m"

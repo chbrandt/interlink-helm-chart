@@ -1,4 +1,3 @@
-{{- $wstunnel_port := .Values.wstunnel.port | default 8080 | int}}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -45,7 +44,7 @@ spec:
           - "--dns-resolver-prefer-ipv4"
           - "--restrict-http-upgrade-path-prefix"
           - "{{.Values.wstunnel.secret}}"
-          - "ws://0.0.0.0:{{$wstunnel_port}}"
+          - "{{.Values.wstunnel.scheme | default "ws"}}://0.0.0.0:{{.Values.wstunnel.port | default 8080}}"
         {{- if .Values.wstunnel.privileged }}
         securityContext:
           privileged: true
@@ -58,7 +57,7 @@ spec:
         {{- include "interlink.containerResources" . | nindent 8 }}
         {{- end }}
         ports:
-          - containerPort: {{$wstunnel_port}}
+          - containerPort: {{.Values.wstunnel.port | default 8080}}
           - containerPort: {{.Values.plugin.port}}
         volumeMounts:
           {{- if .Values.wstunnel.socket }}
@@ -355,47 +354,4 @@ data:
     #PermitOpen /config/sockets/interlink.sock
     AllowTcpForwarding yes
 
-{{- end }}
-
-{{- if .Values.wstunnel.enabled }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: wstunnel
-  namespace: {{.Release.Namespace}}
-spec:
-  type: ClusterIP
-  selector:
-    app: {{.Values.nodeName}}
-  ports:
-    - port: {{$wstunnel_port}}
-      targetPort: {{$wstunnel_port}}
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: wstunnel
-  namespace: {{.Release.Namespace}}
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    nginx.ingress.kubernetes.io/websocket-services: "wstunnel"
-    # nginx.ingress.kubernetes.io/rewrite-target: /
-    # nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
-
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: {{ .Values.wstunnel.host }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: wstunnel
-                port:
-                  number: {{$wstunnel_port}}
 {{- end }}
