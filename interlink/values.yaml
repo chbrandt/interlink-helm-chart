@@ -163,11 +163,16 @@ plugin:
 
 wstunnel:
   enabled: false
+  # The port wstunnel-server will listen on inside the cluster (default: 8080)
   port: 8080
-  scheme: "ws" # or "wss" for secure websocket (ie., if your ingress is configured with TLS)
-  secret: "my-tunnel" # will be used as secret and path for the wstunnel endpoint
+  # Scheme:'ws' or 'wss' for secure websocket connection
+  scheme: "ws"
+  # Secret for the wstunnel path (e.g., "my-tunnel" for path "/my-tunnel")
+  secret: "my-tunnel"
+  # If being exposed via ingress, specify the host
   ingress:
     host: "tunnel.example.com"
+  # wstunnel-server log level: "info", "debug", "warn", "error"
   logLevel: info
   resources:
     CPU:
